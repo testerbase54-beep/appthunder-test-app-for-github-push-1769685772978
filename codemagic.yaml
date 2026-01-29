@@ -1,0 +1,28 @@
+
+workflows:
+  appthunder-build:
+    name: AppThunder Native Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      node: latest
+      xcode: latest
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: ⚡ AppThunder Initialization
+        script: |
+          echo "Initializing AppThunder native environments..."
+          # Hier werden die nativen Ordner automatisch erzeugt
+          npx cap add android || true
+          npx cap add ios || true
+          npx cap sync
+      - name: Build Android (.aab)
+        script: cd android && ./gradlew bundleRelease
+      - name: Build iOS (.ipa)
+        script: |
+          # Baut das iOS Archiv (Signierung passiert in Codemagic UI)
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphoneos -configuration Release archive -archivePath App.xcarchive
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab
+      - *.ipa
